@@ -1,37 +1,65 @@
 import React from 'react';
 import ProductCategoryRow from './ProductCategoryRow';
 import ProductRow from './ProductRow';
-import { Table } from 'react-bootstrap';
+import { Table, Alert } from 'react-bootstrap';
 
 
 const ProductTable = (props) => {
 
-  const { products, filterText, inStockOnly } = props;
 
-  const filteredList = products.filter(product => product.name.toLowerCase().includes(filterText));
+  const { products, categories, filterText, inStockOnly, onDeleteProduct } = props;
 
-  const productList = filteredList.map(product => {
+  const inStockOnlyList = products.filter(product => {
+    if(inStockOnly === false) return product;
+    return product.stocked === inStockOnly;
+  });
+
+  const filteredList = inStockOnlyList.filter(product => product.name.toLowerCase().includes(filterText));
+
+  const productsByCategory = categories.map(category => {
+
+    let productListByCategory = filteredList.map((product, idx) => {
+      if(product.category_id === category.id) {
+        return <ProductRow key={product.name} product={product} onDeleteProduct={onDeleteProduct}/>
+      } 
+      return <React.Fragment key={idx}></React.Fragment>;
+    })
+
     return (
-      <ProductRow key={product.id} name={product.name} price={product.price} />
+      <React.Fragment key={category.id}>
+        <ProductCategoryRow key={category.name} name={category.name} />
+        { productListByCategory }
+      </React.Fragment>
     )
   });
 
+  const hasProducts = productsByCategory.length > 0;
 
-  return (
-    <>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          { productList }
-        </tbody>
-      </Table>
-    </>
-  );
+  if(hasProducts) {
+    return (
+      <>
+        <Table bordered hover>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            { productsByCategory }
+          </tbody>
+        </Table>
+      </>
+    );
+  } else {
+
+    return (
+      <Alert variant="info">
+        No hay productos para mostrar
+      </Alert>
+    )
+  }
 }
 
 
